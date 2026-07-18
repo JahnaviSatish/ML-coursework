@@ -1,3 +1,4 @@
+# observation vector means one row/instance
 import pandas as pd
 import numpy as np
 

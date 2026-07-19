@@ -24,19 +24,14 @@ def frequency(v1, v2):
     f00 = 0
 
     for a, b in zip(v1, v2):
-
         if a == 1 and b == 1:
             f11 += 1
-
         elif a == 1 and b == 0:
             f10 += 1
-
         elif a == 0 and b == 1:
             f01 += 1
-
         else:
             f00 += 1
-
     return f11, f10, f01, f00
 
 def jaccard(f11, f10, f01):
@@ -46,14 +41,17 @@ def smc(f11, f10, f01, f00):
     return (f11 + f00) / (f11 + f10 + f01 + f00)
 
 
-# Main Program
-
 binary = binary_attributes()
 v1, v2 = observation(binary)
 
 f11, f10, f01, f00 = frequency(v1, v2)
 JC = jaccard(f11, f10, f01)
 SMC = smc(f11, f10, f01, f00)
+# note to self- SMC usually gives a higher similarity than JC because (study this more later)
+# Jaccard Coefficient considers only attributes where at least one vector has value 1. 
+# It ignores matches where both values are 0.
+# Simple Matching Coefficient considers both 1-1 and 0-0 matches.
+
 print(binary)
 print("v1")
 print(v1)

@@ -8,22 +8,21 @@ def identify():
     return categorical,numerical
 
 def missingvalues():
-    return df.isnull().sum()
+    return df.isnull().sum()# counting missing vals
 
 def outlier():
-    result = []
+    outlierColumns = []
     for col in numerical:
         Q1 = df[col].quantile(0.25)
         Q3 = df[col].quantile(0.75)
-        IQR = Q3 - Q1
-
+        IQR = Q3 - Q1 #IQR= inter quartile range 
+        # refer to simple written formula while studying later
         lower = Q1 - 1.5 * IQR
         upper = Q3 + 1.5 * IQR
-
         outliers = df[(df[col] < lower) | (df[col] > upper)]
-        result.append(len(outliers))
+        outlierColumns.append(len(outliers))
 
-    return result
+    return outlierColumns
 
 categorical,numerical=identify()
 count=missingvalues()
@@ -37,7 +36,7 @@ print(numerical)
 for col in categorical:
     print("\nAttribute :", col)
     print("Unique values :", df[col].dropna().unique())
-
+    #df[col].dropna().unique()= says in each column, after dropping na values ,taking only unique values
     if len(df[col].dropna().unique()) == 2:
         print("Encoding : Label Encoding")
     else:
@@ -47,15 +46,12 @@ print(df[numerical].describe())# study data range
 
 
 print(count)
-
 c = outlier()
-
 for col, x in zip(numerical, c):
     print(col, ":", x, "outliers")
-
 for col in numerical:
     print(col)
     print("Mean :",df[col].mean())
     print("Variance :",df[col].var())
     print("Standard Deviation :",df[col].std())
-    print()
+  

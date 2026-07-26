@@ -66,3 +66,20 @@ for col in s:
     print("Variance=",s[col]["Variance"])
     print("Standard Deviation=",s[col]["Std Dev"])
     print()
+
+#A9 from here
+# Mean and Standard Deviation using NumPy
+mean_numpy = np.mean(df1, axis=0)
+std_numpy = np.std(df1, axis=0)
+#axis = 0 ↓ → move down the columns (calculate one value per column)
+#axis = 1 → → move across the rows (calculate one value per row)
+# axis understanding taken from internet, here axis is 0 because feature vector was asked
+print("Comparison A9")
+for col in df1.columns:
+    print(col)
+    print("Own Mean =", s[col]["Mean"])#same as before,calling it again
+    print("NumPy Mean =", mean_numpy[col])
+    print()
+    print("Own Standard Deviation =", s[col]["Std Dev"])
+    print("NumPy Standard Deviation =", std_numpy[col])
+    print()

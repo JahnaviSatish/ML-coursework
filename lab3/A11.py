@@ -2,118 +2,83 @@ import numpy as np
 import random
 import pandas as pd
 df=pd.read_excel('ML-lab2 dataset.xlsx',sheet_name=('marketing_campaign'))
-df["Dt_Customer"] = pd.to_datetime(df["Dt_Customer"]).astype("int64")
-df1 = df.copy()
-
-def labelEncoding(df, column):
-    data = df.copy()
-    values = data[column].dropna().unique()
-    labels = {}  
-    for i, value in enumerate(values): 
-        labels[value] = i
-    data[column] = data[column].map(labels)
-    return data, labels
-
-def oneHot(df, column):
-    data = df.copy()
-    values = data[column].dropna().unique()
-    for value in values:
-        new_column = column + "_" + str(value)
-        data[new_column] = (data[column] == value).astype(int)
-    data.drop(column, axis=1, inplace=True)  
-
-    return data
+# for now i am dropping all non numeric columns
+df1 = df.select_dtypes(include=['number']).dropna().to_numpy()
 
 # used to find the nearest centroid
 def euclidean(v1,v2):
     euclidean=0
-    for i,j in zip(v1,v2):
-        euclidean+=(j-i)**2
+    for i in range(len(v1)):
+        euclidean+=(v1[i]-v2[i])**2
     euclidean=np.sqrt(euclidean)
     return euclidean
 
-
-# Func to calculate centroid of one cluster
 # The centroid is = the average of all points in that cluster
-def centroid(points):
-    if len(points) == 0:
-        return None#cluster becomes empty, return None
-    centre = []
-    # Finding average of every column
-    # Every column represents one feature
-    for i in range(len(points[0])):
-        total = 0
-        # Add all values of one feature
-        for point in points:
-            total += point[i]
-        centre.append(total / len(points))
-
-    return np.array(centre)
-
-def kmeans(data, k):
+# randomly initializing k centroid by picking k samples from df1
+def initialize_random_centroids(k, df1):
+    m = len(df1)
+    n = len(df1[0])
+    # a centroid should be of shape (1,n), so the centroids array will be of shape (k,n)
     centroids = []
-    index = random.sample(range(len(data)), k)
+    for i in range(k):
+        a = random.randint(0, m - 1)
+        centroids.append(df1[a])
+    return centroids
 
-    for i in index:
-        centroids.append(data[i])
+def closest_centroid(df1, centroids, k):
+    distance=[]
+    closest=0
+    mindist= euclidean(df1, centroids[0]) #distance to the first centroid
+    for i in range(k):
+        distance.append(euclidean(centroids[i], df1))
+         # If this centroid is closer, update the minimum distance
+        if distance[i] < mindist:
+            mindist = distance[i]
+            closest = i
 
-    while True:
-        clusters = []
-        for point in data:    # Assign every point to the nearest centroidd
-            dist = []
-            # Find distance from current point
-            # to every centroid
-            for centre in centroids:
-                dist.append(euclidean(point, centre))
-            # Find the nearest centroid
-            nearest = dist.index(min(dist))
-            clusters.append(nearest)# Storing cluster number
-        # Recalc the centroid of every cluster
-        new_centroids = []
-        for i in range(k):#one cluster at a time
-            points = []
+    # Return the indedf1 of the closest centroid
+    return closest
 
-            # Collect all points belonging to the current cluster
-            for point, c in zip(data, clusters):
-                if c == i:
-                    points.append(point)
-            # If no points belong to the cluster,
-            # keep the previous centroid
-            if len(points) == 0:
-                new_centroids.append(centroids[i])
-            else:# Otherwise calculate the new centroid
-                new_centroids.append(centroid(points))
+def create_clusters(centroids, k, df1):
+    m = len(df1)
+    cluster_idx = [] #empty list to store clusters
+    for i in range(m):
+        #Find the indedf1 of the closest centroid for the current data point
+        closest = closest_centroid(df1[i], centroids, k)
+        #cluster indedf1 in list
+        cluster_idx.append(closest)
+    return cluster_idx
 
-        stop = True# Stop when centroids dont change
-        for old, new in zip(centroids, new_centroids):
-            # Compare old centroid with newly calculated centroid
-            if not np.allclose(old, new):
-                stop = False
-                break
-        if stop:# Exit the loop if the centroids remain the same
+# new centroids calc
+def new_centroids(cluster_idx, k, df1):
+    centroids = []
+    for i in range(k): #say 0,1,2
+        points = []
+        for j in range(len(df1)): # say 2200 patients
+            if cluster_idx[j] == i: # see how many cluster indedf1 for all 2200 patients match k values 0,1,2
+                points.append(df1[j]) # if they match put that in points array as a feature vector
+        centroids.append(np.mean(points, axis=0)) # finding the average of all the vectors collected in 1 cluster , axis 0 means column wise
+        # example point=[[20,10],[15,5]] then centroids = (20+15 / 2 , 10+5 / 2)
+    return np.array(centroids) # send an array of new centroids calculated for k=0,1,2
+    
+def kmeans(k, df1, iterations):
+    centroids = initialize_random_centroids(k, df1) #step1 random k centers
+    for i in range(iterations):
+        print("Iteration:", i + 1)
+        clusters = create_clusters(centroids, k, df1) #step2 forming clusters
+        old_centroids = centroids
+        centroids = new_centroids(clusters, k, df1) #step3 new centroids
+        if np.array_equal(old_centroids, centroids): #step4 convergence checking
             break
+    return centroids
 
-        # Otherwise continue with the new centroids
-        centroids = new_centroids
-    return clusters, centroids
-
-df1 = df1.fillna(df1.median(numeric_only=True))
-ordinal = ["Education"]   # Education has an order, so Label Encoding is used
-nominal = ["Marital_Status"] # Marital Status has no order, so One-Hot Encoding is used
-
-for col in ordinal:
-    df1, mapping = labelEncoding(df1, col)
-for col in nominal:
-    df1 = oneHot(df1, col)
-# Converting dataframe into a matrix
-# K-Means works with numerical matrices
-
-data = df1.to_numpy(dtype=float)
+import time
 k = 3# Number of clusters to be formed
-clusters, centroids = kmeans(data, k)
-print("Cluster for every data point")
-print(clusters)
-print()
-print("Final Centroids")
-for c in centroids:
-    print(c)
+start= time.time()
+c = kmeans(k,df1,100)
+end=time.time()
+t=end-start
+print("Centroids:")
+print(c)
+print(t)
+

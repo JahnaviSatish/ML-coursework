@@ -1,7 +1,8 @@
 import math
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import time
+import tracemalloc
 df = pd.read_excel("ML-lab2 dataset.xlsx", sheet_name="marketing_campaign")
 df["Dt_Customer"] = pd.to_datetime(df["Dt_Customer"]).astype("int64")
 
@@ -144,7 +145,30 @@ def plot_minkowski(distances):
 
     plt.show()
 
+def performance_test(func, *args):
 
+    # Start measuring memory
+    tracemalloc.start()
+
+    # Start timer
+    start = time.perf_counter()
+
+    # Execute the function
+    result = func(*args)
+
+    # Stop timer
+    end = time.perf_counter()
+
+    # Get memory usage
+    current, peak = tracemalloc.get_traced_memory()
+
+    # Stop memory tracking
+    tracemalloc.stop()
+
+    print("Execution Time:", end - start, "seconds")
+    print("Peak Memory:", peak / 1024, "KB")
+
+    return result
 # -----------------------------
 # Unit Test
 # -----------------------------
@@ -188,3 +212,6 @@ for p, d in enumerate(distances, start=1):
     print(f"p = {p}  Distance = {d:.4f}")
 
 plot_minkowski(distances)
+
+print("performance of plot function")
+print(performance_test(plot_minkowski,distances))

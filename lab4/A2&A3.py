@@ -1,4 +1,6 @@
 import pandas as pd
+import time
+import tracemalloc
 df=pd.read_excel("ML-lab2 dataset.xlsx",sheet_name="marketing_campaign")
 # logic computed by chatgpt
 df["Dt_Customer"] = pd.to_datetime(df["Dt_Customer"]) 
@@ -35,6 +37,31 @@ def oneHot(df1, column):
 
     return data
 
+def performance_test(func, *args):
+
+    # Start measuring memory
+    tracemalloc.start()
+
+    # Start timer
+    start = time.perf_counter()
+
+    # Execute the function
+    result = func(*args)
+
+    # Stop timer
+    end = time.perf_counter()
+
+    # Get memory usage
+    current, peak = tracemalloc.get_traced_memory()
+
+    # Stop memory tracking
+    tracemalloc.stop()
+
+    print("Execution Time:", end - start, "seconds")
+    print("Peak Memory:", peak / 1024, "KB")
+
+    return result
+
 ####################### A2 ###############################
 # --------------------------
 # Label Encoding Example
@@ -45,7 +72,6 @@ df1, labels = labelEncoding(df1, "Education")
 print("Encoded Labels:")
 print(labels)
 
-print(df1.head())
 label_df=df1.copy()
 # --------------------------
 # One Hot Encoding Example
@@ -53,7 +79,6 @@ label_df=df1.copy()
 
 df1 = oneHot(df1, "Marital_Status")
 
-print(df1.head())
 
 ########################### A3 #######################
 print("Original Dataset Shape:", df.shape)
@@ -117,3 +142,10 @@ expected_columns = df.shape[1] - 1 + unique_values
 assert df1.shape == (df.shape[0], expected_columns)
 
 print("One-Hot Encoding Dimension Test: Passed")
+
+print("performance for label encoding")
+print(performance_test(labelEncoding,df1,"Education"))
+print("performance for one-hot encoding")
+print(performance_test(oneHot,label_df,"Marital_Status"))
+
+

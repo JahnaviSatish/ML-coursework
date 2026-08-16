@@ -160,9 +160,11 @@ dist_rec=all_dist(testvector, X_train.values, y_train.values, "euclidean", p=2)
 sorting=sorting_metric("selectionSort",dist_rec)
 knn=k_nearest(3,sorting)
 pred=tie_breaker(knn)
+actual=y_test.iloc[3]
 print("distance, class for k value : ",knn)
 print("predicted class:",pred)
-print("accuracy:",accuracy(pred,y_test))
+print("actual class:",actual)
+#print("accuracy:",accuracy(pred,y_test))
 
 #step1- print actual y_test val
 #step2-calculate distance array along with the class

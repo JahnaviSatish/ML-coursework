@@ -17,7 +17,7 @@
 # Function names in this section use the "_AI" suffix where required
 # to distinguish them from overlapping manual implementations.
 # ======================================================================
-
+import time
 import numpy as np
 import pandas as pd
 import math
@@ -36,7 +36,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
     test_size=0.3,
-    random_state=31,
+    random_state=7,
     stratify=y
 )
 
@@ -396,8 +396,8 @@ X = df.drop(columns=["label","subject"]).copy()
 y = df["label"].copy()
 #print(X)
 #print(y)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=31, stratify=y)  
-#random_state=31  same split every time you run program
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=7, stratify=y)  
+#random_state=7  same split every time you run program
 # stratify=y --> healthy/schizophrenia class proportions are maintained in both sets.
 
 #### A4 ######
@@ -497,8 +497,8 @@ X = df.drop(columns=["label","subject"]).copy()
 y = df["label"].copy()
 #print(X)
 #print(y)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=31, stratify=y)  
-#random_state=31  same split every time you run program
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=7, stratify=y)  
+#random_state=7  same split every time you run program
 # stratify=y --> healthy/schizophrenia class proportions are maintained in both sets.
 #### for this dataset imputation is not required as it is already cleaned
 #### but for lab i am writing imputation function
@@ -729,6 +729,127 @@ for k in range(1, 10):
             f1Score
         )
     )
+
+# ======================================================================
+# COMPUTATIONAL TIME COMPARISON
+# ======================================================================
+
+import time
+
+NUM_RUNS = 10
+
+AI_times = []
+A3_times = []
+manual_times = []
+
+
+for run in range(NUM_RUNS):
+
+    # ==============================================================
+    # A1 - AI IMPLEMENTATION
+    # ==============================================================
+
+    start_time = time.perf_counter()
+
+    for k in range(1, 10):
+
+        predictions = []
+
+        for testVector in X_test.to_numpy():
+
+            predictedLabel = knn_AI(
+                testVector,
+                X_train.to_numpy(),
+                y_train.to_numpy(),
+                k,
+                metric,
+                p,
+                sortMethod
+            )
+
+            predictions.append(predictedLabel)
+
+    end_time = time.perf_counter()
+
+    AI_times.append(end_time - start_time)
+
+
+    # ==============================================================
+    # A3 - SCIKIT-LEARN IMPLEMENTATION
+    # ==============================================================
+
+    start_time = time.perf_counter()
+
+    for k in range(1, 10):
+
+        neigh = KNeighborsClassifier(n_neighbors=k)
+
+        neigh.fit(X_train, y_train)
+
+        prediction = neigh.predict(X_test)
+
+    end_time = time.perf_counter()
+
+    A3_times.append(end_time - start_time)
+
+
+    # ==============================================================
+    # A4 - MANUAL IMPLEMENTATION
+    # ==============================================================
+
+    start_time = time.perf_counter()
+
+    for k in range(1, 10):
+
+        for i in range(len(X_test)):
+
+            testvector = X_test.iloc[i].values
+
+            dist_rec = all_dist_own(
+                testvector,
+                X_train.values,
+                y_train.values,
+                "euclidean_own",
+                p=2
+            )
+
+            sorting = sorting_metric_own(
+                "selectionSort_own",
+                dist_rec
+            )
+
+            knn = k_nearest_own(
+                k,
+                sorting
+            )
+
+            pred = tie_breaker_own(knn)
+
+    end_time = time.perf_counter()
+
+    manual_times.append(end_time - start_time)
+
+
+# ======================================================================
+# AVERAGE TIME
+# ======================================================================
+
+AI_average_time = sum(AI_times) / NUM_RUNS
+A3_average_time = sum(A3_times) / NUM_RUNS
+manual_average_time = sum(manual_times) / NUM_RUNS
+
+
+print("\n\nComputational Time Comparison")
+print("-" * 70)
+
+print(f"{'Implementation':<25}{'Average Time (seconds)':<25}")
+print("-" * 70)
+
+print(f"{'A1 - AI':<25}{AI_average_time:<25.6f}")
+print(f"{'A3 - Scikit-learn':<25}{A3_average_time:<25.6f}")
+print(f"{'A4 - Manual':<25}{manual_average_time:<25.6f}")
+
+print("-" * 70)
 
 # ======================================================================
 # FINAL COMPARISON TABLES

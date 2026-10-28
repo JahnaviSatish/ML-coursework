@@ -39,7 +39,6 @@ for epochs in range(1000):
         weights[3]+=alpha*error* x[3]
         bias+=alpha * error
 
-    # Training
     for x, z in zip(inputs, target):
 
         s = summation(x, weights, bias)

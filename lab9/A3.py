@@ -17,6 +17,7 @@ classifiers = {
     "AdaBoost":AdaBoostClassifier(random_state=42),
     "Naive Bayes":GaussianNB()
 }
+# names in the classifiers , inside brackets should be the exact same name. otherwise error
 
 results = []
 for name, clf in classifiers.items():
@@ -24,4 +25,4 @@ for name, clf in classifiers.items():
     results.append({"Classifier": name, "Mean Accuracy": scores.mean(), "Std Dev": scores.std()})
 results_df = pd.DataFrame(results)
 print(results_df)
-results_df.to_csv("A3_classifier_comparison.csv", index=False)
+results_df.to_csv("comparison.csv", index=False)
